@@ -1,0 +1,14 @@
+<body style="background:#fff8eb;color:#3f0e70;font:14px Arial;padding:20px">
+<h2>Exportar MEGACREW-REFORMA</h2><p>Este plugin lê o frame e exporta assets. Não altera o documento.</p>
+<button id="meta" disabled>Baixar metadados</button>
+<p>IDs dos nodes separados por vírgula:</p><textarea id="ids" style="width:100%;height:130px"></textarea>
+<p><select id="format"><option>SVG</option><option>PNG</option></select> <button id="export">Exportar assets</button></p>
+<pre id="status" style="white-space:pre-wrap">Lendo frame...</pre><div id="download"></div>
+<script>
+let metadata;
+function download(name,data){const b=new Blob([JSON.stringify(data)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.textContent='Baixar '+name;document.getElementById('download').replaceChildren(a);a.click();}
+function base64(a){let s='';for(let i=0;i<a.length;i+=8192)s+=String.fromCharCode.apply(null,Array.from(a.slice(i,i+8192)));return btoa(s);}
+document.getElementById('meta').onclick=()=>download('megacrew-metadata.json',metadata);
+document.getElementById('export').onclick=()=>parent.postMessage({pluginMessage:{type:'export',ids:document.getElementById('ids').value.split(',').map(x=>x.trim()).filter(Boolean),format:document.getElementById('format').value}},'*');
+onmessage=e=>{const m=e.data.pluginMessage;if(!m)return;if(m.type==='metadata'){metadata=m.data;document.getElementById('meta').disabled=false;document.getElementById('status').textContent='Frame lido: '+m.data.name+' · '+m.data.width+' × '+m.data.height;}if(m.type==='progress'||m.type==='error')document.getElementById('status').textContent=m.message;if(m.type==='assets'){const assets=m.assets.map(a=>({...a,data:base64(a.bytes),bytes:undefined}));document.getElementById('status').textContent=assets.length+' assets exportados';download('megacrew-assets-'+m.assets[0].format.toLowerCase()+'.json',{assets});}};
+</script></body>
